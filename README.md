@@ -26,6 +26,14 @@ npm run build
 npm start
 ```
 
+## Build MCP Bundle
+
+```bash
+npm run build:mcpb
+```
+
+This creates `alpineconditions.mcpb` in the repository root for import into Claude Desktop.
+
 For development:
 
 ```bash
