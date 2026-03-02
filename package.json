@@ -10,7 +10,8 @@
     "build:mcpb": "npm run build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-mcpb.ps1",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "check": "tsc -p tsconfig.json --noEmit"
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test:prod": "node --import tsx --test test/prod/*.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

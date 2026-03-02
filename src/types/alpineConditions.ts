@@ -40,8 +40,15 @@ export interface WeatherForecastResponse {
 }
 
 export interface WeatherModelDetails {
+  agency: string
+  countryCode: string | null
   model: string
+  label: string
+  days: number | null
+  resolutionInDeg: number | null
+  resolutionInKm: number | null
   sortOrder: number
+  modelType: string
 }
 
 export interface AvailableModelsResponse {

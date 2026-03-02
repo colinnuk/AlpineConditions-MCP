@@ -39,6 +39,13 @@ const fetchJson = async <T>(url: URL): Promise<T> => {
     throw new Error(`AlpineConditions API request failed: ${response.status} ${response.statusText}`)
   }
 
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.toLowerCase().includes('application/json')) {
+    const body = await response.text()
+    const preview = body.slice(0, 200).replace(/\s+/g, ' ').trim()
+    throw new Error(`AlpineConditions API returned non-JSON content (${contentType || 'unknown'}): ${preview}`)
+  }
+
   return (await response.json()) as T
 }
 

@@ -7,15 +7,14 @@ import {
   getLocationInfo,
   getWeatherForecast
 } from './services/alpineConditionsApi.js'
+import {
+  buildLocationModelGuidance,
+  buildSelectedModelGuidance,
+  chooseDefaultForecastModels
+} from './services/modelGuidance.js'
 import { summarizeForecasts } from './services/summarizeForecast.js'
 
 const numberSchema = z.number().finite()
-
-const chooseDefaultModels = async (latitude: number, longitude: number): Promise<string[]> => {
-  const available = await getAvailableModels(latitude, longitude)
-  const ordered = [...available.models].sort((a, b) => a.sortOrder - b.sortOrder)
-  return ordered.slice(0, 3).map((model) => model.model)
-}
 
 export const createMcpServer = () => {
   const server = new McpServer({
@@ -24,29 +23,61 @@ export const createMcpServer = () => {
   })
 
   server.tool(
-    'get_mountain_weather_forecast',
-    'Loads mountain-focused weather forecast data for coordinates from alpineconditions.com.',
+    'get_weather_forecast',
+    'Loads weather forecast data for coordinates from alpineconditions.com.',
     {
       latitude: numberSchema.describe('Latitude in decimal degrees.'),
       longitude: numberSchema.describe('Longitude in decimal degrees.'),
       models: z.array(z.string().min(1)).optional().describe('Optional weather model names. If omitted, top 3 available models are used.')
     },
     async ({ latitude, longitude, models }) => {
-      const requestedModels = models && models.length > 0 ? models : await chooseDefaultModels(latitude, longitude)
+      const available = await getAvailableModels(latitude, longitude)
+      const requestedModels =
+        models && models.length > 0 ? models : chooseDefaultForecastModels(available.models)
 
       const [location, forecast] = await Promise.all([
         getLocationInfo(latitude, longitude),
         getWeatherForecast(latitude, longitude, requestedModels)
       ])
+      const modelsUsed = forecast.modelNames.length > 0 ? forecast.modelNames : requestedModels
 
       const result = {
         requestedCoordinates: { latitude, longitude },
         locationName: location.name,
         elevationM: location.location.elevation,
         timeZone: location.timeZone,
-        modelsUsed: forecast.modelNames.length > 0 ? forecast.modelNames : requestedModels,
-        mountainSummaryByModel: summarizeForecasts(forecast.weatherForecasts),
+        modelsUsed,
+        selectedModelGuidance: buildSelectedModelGuidance(available.models, modelsUsed),
+        locationModelGuidance: buildLocationModelGuidance(available.models),
+        forecastSummaryByModel: summarizeForecasts(forecast.weatherForecasts),
         rawForecasts: forecast.weatherForecasts
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ]
+      }
+    }
+  )
+
+  server.tool(
+    'get_weather_model_guidance',
+    'Loads weather model guidance for a location, including Blend and high-resolution model availability.',
+    {
+      latitude: numberSchema.describe('Latitude in decimal degrees.'),
+      longitude: numberSchema.describe('Longitude in decimal degrees.')
+    },
+    async ({ latitude, longitude }) => {
+      const available = await getAvailableModels(latitude, longitude)
+
+      const result = {
+        requestedCoordinates: { latitude, longitude },
+        defaultModelSelection: chooseDefaultForecastModels(available.models),
+        locationModelGuidance: buildLocationModelGuidance(available.models)
       }
 
       return {

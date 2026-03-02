@@ -1,17 +1,25 @@
 # AlpineConditions-MCP
 
-An MCP server for alpineconditions.com focused on mountain weather.
+An MCP server for alpineconditions.com weather and geolocation tools.
 
 ## What this can do now
 
-- `get_mountain_weather_forecast`
+- `get_weather_forecast`
   - Inputs: `latitude`, `longitude`, optional `models`
-  - Loads forecast data from `https://www.alpineconditions.com/weatherforecastapi/weatherForecast`
-  - Includes mountain-focused summary fields (snowfall totals, freezing level, wind gusts, rain-snow level)
+  - Loads forecast data from `https://apigateway.alpineconditions.com/weatherforecastapi/weatherForecast`
+  - Includes forecast summary fields (snowfall totals, freezing level, wind gusts, rain-snow level)
+  - Includes model guidance for selected models and location-aware high-resolution/Blend availability
 
 - `get_location_name_from_geolocation`
-  - Uses `https://www.alpineconditions.com/geolocation`
-  - Resolves a human-readable location via `https://www.alpineconditions.com/weatherforecastapi/location`
+  - Uses `https://apigateway.alpineconditions.com/geolocation`
+  - Resolves a human-readable location via `https://apigateway.alpineconditions.com/weatherforecastapi/location`
+
+- `get_weather_model_guidance`
+  - Inputs: `latitude`, `longitude`
+  - Returns location-specific model guidance, including:
+    - whether Alpine Conditions Blend is available
+    - which high-resolution models are available at that location
+    - model-specific usage guidance
 
 ## Setup
 
@@ -34,6 +42,14 @@ npm run build:mcpb
 
 This creates `alpineconditions.mcpb` in the repository root for import into Claude Desktop.
 
+## Production Test Suite
+
+```bash
+npm run test:prod
+```
+
+This runs live integration tests against `https://www.alpineconditions.com`.
+
 For development:
 
 ```bash
@@ -43,7 +59,7 @@ npm run dev
 ## Configuration
 
 - `ALPINECONDITIONS_BASE_URL` (optional)
-  - Default: `https://www.alpineconditions.com`
+  - Default: `https://apigateway.alpineconditions.com`
   - Useful for local testing or alternate environments.
 
 ## Notes

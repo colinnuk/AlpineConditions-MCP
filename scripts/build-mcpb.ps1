@@ -42,14 +42,14 @@ $manifest = @{
       command = 'node'
       args = @('${__dirname}/server/index.js')
       env = @{
-        ALPINECONDITIONS_BASE_URL = 'https://www.alpineconditions.com'
+        ALPINECONDITIONS_BASE_URL = 'https://apigateway.alpineconditions.com'
       }
     }
   }
   tools = @(
     @{
-      name = 'get_mountain_weather_forecast'
-      description = 'Load mountain-focused weather forecast data for coordinates.'
+      name = 'get_weather_forecast'
+      description = 'Load weather forecast data for coordinates.'
     },
     @{
       name = 'get_location_name_from_geolocation'
