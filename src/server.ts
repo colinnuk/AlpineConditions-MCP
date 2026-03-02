@@ -12,7 +12,7 @@ import {
   buildSelectedModelGuidance,
   chooseDefaultForecastModels
 } from './services/modelGuidance.js'
-import { summarizeForecasts } from './services/summarizeForecast.js'
+import { summarizeForecasts, summarizeForecastsBy6HourChunks } from './services/summarizeForecast.js'
 
 const numberSchema = z.number().finite()
 
@@ -42,15 +42,21 @@ export const createMcpServer = () => {
       const modelsUsed = forecast.modelNames.length > 0 ? forecast.modelNames : requestedModels
 
       const result = {
-        requestedCoordinates: { latitude, longitude },
-        locationName: location.name,
-        elevationM: location.location.elevation,
-        timeZone: location.timeZone,
-        modelsUsed,
-        selectedModelGuidance: buildSelectedModelGuidance(available.models, modelsUsed),
-        locationModelGuidance: buildLocationModelGuidance(available.models),
-        forecastSummaryByModel: summarizeForecasts(forecast.weatherForecasts),
-        rawForecasts: forecast.weatherForecasts
+        location: {
+          requestedCoordinates: { latitude, longitude },
+          locationName: location.name,
+          elevationM: location.location.elevation,
+          timeZone: location.timeZone
+        },
+        models: {
+          used: modelsUsed,
+          selectedModelGuidance: buildSelectedModelGuidance(available.models, modelsUsed),
+          locationModelGuidance: buildLocationModelGuidance(available.models)
+        },
+        forecast: {
+          overviewByModel: summarizeForecasts(forecast.weatherForecasts),
+          sixHourlyByModel: summarizeForecastsBy6HourChunks(forecast.weatherForecasts)
+        }
       }
 
       return {

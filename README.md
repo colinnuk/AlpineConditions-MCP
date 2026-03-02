@@ -7,7 +7,9 @@ An MCP server for alpineconditions.com weather and geolocation tools.
 - `get_weather_forecast`
   - Inputs: `latitude`, `longitude`, optional `models`
   - Loads forecast data from `https://apigateway.alpineconditions.com/weatherforecastapi/weatherForecast`
-  - Includes forecast summary fields (snowfall totals, freezing level, wind gusts, rain-snow level)
+  - Returns structured forecast JSON with:
+    - `overviewByModel` (high-level stats)
+    - `sixHourlyByModel` (6-hour chunked summaries for easier LLM interpretation)
   - Includes model guidance for selected models and location-aware high-resolution/Blend availability
 
 - `get_location_name_from_geolocation`

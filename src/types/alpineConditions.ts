@@ -30,6 +30,7 @@ export interface WeatherForecastDto {
   snowfall: (number | null)[] | null
   windSpeed_10m: (number | null)[] | null
   windGusts_10m: (number | null)[] | null
+  weatherDescription: (string | null)[] | null
   freezingLevel: (number | null)[] | null
   rainSnowLevel: (number | null)[] | null
 }

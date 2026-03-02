@@ -43,29 +43,50 @@ test('production forecast tool returns usable weather data', { timeout: 60_000 }
     })
 
     const payload = parseToolTextResponse(result) as {
-      requestedCoordinates: { latitude: number; longitude: number }
-      locationName: string | null
-      timeZone: string
-      modelsUsed: string[]
-      selectedModelGuidance: Array<{ model: string; guidance: string }>
-      locationModelGuidance: {
-        blendModelAvailable: boolean
-        highResolutionModelsAvailable: Array<{ model: string }>
+      location: {
+        requestedCoordinates: { latitude: number; longitude: number }
+        locationName: string | null
+        timeZone: string
       }
-      forecastSummaryByModel: Array<{ model: string }>
-      rawForecasts: unknown[]
+      models: {
+        used: string[]
+        selectedModelGuidance: Array<{ model: string; guidance: string }>
+        locationModelGuidance: {
+          blendModelAvailable: boolean
+          highResolutionModelsAvailable: Array<{ model: string }>
+        }
+      }
+      forecast: {
+        overviewByModel: Array<{ model: string }>
+        sixHourlyByModel: Array<{
+          model: string
+          chunkHours: number
+          chunks: Array<{
+            points: number
+            temperature: { minC: number | null; maxC: number | null; avgC: number | null }
+          }>
+        }>
+      }
     }
 
-    assert.equal(payload.requestedCoordinates.latitude, 46.8523)
-    assert.equal(payload.requestedCoordinates.longitude, -121.7603)
-    assert.equal(typeof payload.timeZone, 'string')
-    assert.ok(payload.timeZone.length > 0, 'timeZone should not be empty')
-    assert.ok(payload.modelsUsed.length > 0, 'modelsUsed should not be empty')
-    assert.equal(payload.selectedModelGuidance.length, payload.modelsUsed.length)
-    assert.ok(payload.selectedModelGuidance.every((m) => m.guidance.length > 0))
-    assert.equal(typeof payload.locationModelGuidance.blendModelAvailable, 'boolean')
-    assert.ok(payload.forecastSummaryByModel.length > 0, 'forecastSummaryByModel should not be empty')
-    assert.ok(payload.rawForecasts.length > 0, 'rawForecasts should not be empty')
+    assert.equal(payload.location.requestedCoordinates.latitude, 46.8523)
+    assert.equal(payload.location.requestedCoordinates.longitude, -121.7603)
+    assert.equal(typeof payload.location.timeZone, 'string')
+    assert.ok(payload.location.timeZone.length > 0, 'location.timeZone should not be empty')
+    assert.ok(payload.models.used.length > 0, 'models.used should not be empty')
+    assert.equal(payload.models.selectedModelGuidance.length, payload.models.used.length)
+    assert.ok(payload.models.selectedModelGuidance.every((m) => m.guidance.length > 0))
+    assert.equal(typeof payload.models.locationModelGuidance.blendModelAvailable, 'boolean')
+    assert.ok(payload.forecast.overviewByModel.length > 0, 'forecast.overviewByModel should not be empty')
+    assert.ok(payload.forecast.sixHourlyByModel.length > 0, 'forecast.sixHourlyByModel should not be empty')
+    assert.ok(
+      payload.forecast.sixHourlyByModel.every((modelSummary) => modelSummary.chunkHours === 6),
+      'every model should use 6-hour chunking'
+    )
+    assert.ok(
+      payload.forecast.sixHourlyByModel.some((modelSummary) => modelSummary.chunks.length > 0),
+      'at least one model should contain chunked data'
+    )
   } finally {
     await close()
   }
