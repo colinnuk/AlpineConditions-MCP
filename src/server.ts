@@ -4,6 +4,7 @@ import { z } from 'zod'
 import {
   getAvailableModels,
   getGeolocation,
+  getHistoricalEstimate,
   getLocationInfo,
   getWeatherForecast
 } from './services/alpineConditionsApi.js'
@@ -13,6 +14,10 @@ import {
   chooseDefaultForecastModels
 } from './services/modelGuidance.js'
 import { summarizeForecasts, summarizeForecastsBy6HourChunks } from './services/summarizeForecast.js'
+import {
+  summarizeHistoricalEstimate,
+  summarizeHistoricalEstimateBy6HourChunks
+} from './services/summarizeHistoricalEstimate.js'
 
 const numberSchema = z.number().finite()
 
@@ -84,6 +89,44 @@ export const createMcpServer = () => {
         requestedCoordinates: { latitude, longitude },
         defaultModelSelection: chooseDefaultForecastModels(available.models),
         locationModelGuidance: buildLocationModelGuidance(available.models)
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ]
+      }
+    }
+  )
+
+  server.tool(
+    'get_historical_weather_estimate',
+    'Loads historical weather estimate data for coordinates from alpineconditions.com for approximately the last 6 days.',
+    {
+      latitude: numberSchema.describe('Latitude in decimal degrees.'),
+      longitude: numberSchema.describe('Longitude in decimal degrees.')
+    },
+    async ({ latitude, longitude }) => {
+      const [location, historical] = await Promise.all([
+        getLocationInfo(latitude, longitude),
+        getHistoricalEstimate(latitude, longitude)
+      ])
+
+      const estimate = historical.estimate
+      const result = {
+        location: {
+          requestedCoordinates: { latitude, longitude },
+          locationName: location.name,
+          elevationM: location.location.elevation,
+          timeZone: location.timeZone
+        },
+        historicalEstimate: {
+          overview: summarizeHistoricalEstimate(estimate),
+          sixHourly: summarizeHistoricalEstimateBy6HourChunks(estimate)
+        }
       }
 
       return {

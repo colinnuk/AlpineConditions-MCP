@@ -92,6 +92,61 @@ test('production forecast tool returns usable weather data', { timeout: 60_000 }
   }
 })
 
+test('production historical estimate tool returns usable recent-history data', { timeout: 60_000 }, async () => {
+  const { client, close } = await connectClientAndServer()
+
+  try {
+    const result = await client.callTool({
+      name: 'get_historical_weather_estimate',
+      arguments: {
+        latitude: 46.8523,
+        longitude: -121.7603
+      }
+    })
+
+    const payload = parseToolTextResponse(result) as {
+      location: {
+        requestedCoordinates: { latitude: number; longitude: number }
+        locationName: string | null
+        timeZone: string
+      }
+      historicalEstimate: {
+        overview: {
+          generatedAtUtc: string
+          hoursAvailable: number
+          temperature: { minC: number | null; maxC: number | null; avgC: number | null }
+          precipitation: { totalMm: number | null }
+          wind: { maxGustKph: number | null }
+        }
+        sixHourly: {
+          chunkHours: number
+          chunks: Array<{
+            points: number
+            temperature: { minC: number | null; maxC: number | null; avgC: number | null }
+            precipitation: { totalMm: number | null }
+          }>
+        }
+      }
+    }
+
+    assert.equal(payload.location.requestedCoordinates.latitude, 46.8523)
+    assert.equal(payload.location.requestedCoordinates.longitude, -121.7603)
+    assert.equal(typeof payload.location.timeZone, 'string')
+    assert.ok(payload.location.timeZone.length > 0, 'location.timeZone should not be empty')
+    assert.equal(typeof payload.historicalEstimate.overview.generatedAtUtc, 'string')
+    assert.ok(payload.historicalEstimate.overview.generatedAtUtc.length > 0)
+    assert.ok(payload.historicalEstimate.overview.hoursAvailable > 0)
+    assert.equal(payload.historicalEstimate.sixHourly.chunkHours, 6)
+    assert.ok(payload.historicalEstimate.sixHourly.chunks.length > 0)
+    assert.ok(
+      payload.historicalEstimate.sixHourly.chunks.every((chunk) => chunk.points > 0),
+      'all six-hour chunks should include at least one point'
+    )
+  } finally {
+    await close()
+  }
+})
+
 test('production geolocation tool resolves a location name and coordinates', { timeout: 60_000 }, async () => {
   const { client, close } = await connectClientAndServer()
 

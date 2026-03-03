@@ -2,6 +2,7 @@ import { getBaseUrl } from '../config.js'
 import {
   AvailableModelsResponse,
   GeolocationResponse,
+  HistoricalEstimateResponse,
   LocationInfoResponse,
   WeatherForecastResponse
 } from '../types/alpineConditions.js'
@@ -80,4 +81,12 @@ export const getWeatherForecast = async (
   })
 
   return fetchJson<WeatherForecastResponse>(url)
+}
+
+export const getHistoricalEstimate = async (
+  latitude: number,
+  longitude: number
+): Promise<HistoricalEstimateResponse> => {
+  const url = buildUrl('/weatherforecastapi/historicalestimate', { latitude, longitude })
+  return fetchJson<HistoricalEstimateResponse>(url)
 }

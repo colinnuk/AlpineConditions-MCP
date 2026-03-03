@@ -40,6 +40,25 @@ export interface WeatherForecastResponse {
   modelNames: string[]
 }
 
+export interface HistoricalEstimateDto {
+  timestampUtc: string
+  location: LocationWithElevation
+  dateTimeUtc: (string | null)[] | null
+  temperature_2m: (number | null)[] | null
+  precipitation: (number | null)[] | null
+  rain: (number | null)[] | null
+  snowfall: (number | null)[] | null
+  snowLiquidRatio: (number | null)[] | null
+  windSpeed_10m: (number | null)[] | null
+  windDirection_10m: (number | null)[] | null
+  windGusts_10m: (number | null)[] | null
+  cloudCover: (number | null)[] | null
+}
+
+export interface HistoricalEstimateResponse {
+  estimate: HistoricalEstimateDto
+}
+
 export interface WeatherModelDetails {
   agency: string
   countryCode: string | null

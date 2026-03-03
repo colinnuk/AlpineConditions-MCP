@@ -12,6 +12,13 @@ An MCP server for alpineconditions.com weather and geolocation tools.
     - `sixHourlyByModel` (6-hour chunked summaries for easier LLM interpretation)
   - Includes model guidance for selected models and location-aware high-resolution/Blend availability
 
+- `get_historical_weather_estimate`
+  - Inputs: `latitude`, `longitude`
+  - Loads historical estimate data from `https://apigateway.alpineconditions.com/weatherforecastapi/historicalestimate`
+  - Returns structured estimate JSON with:
+    - `overview` (high-level stats for the recent historical window)
+    - `sixHourly` (6-hour chunked summaries over the historical timeline)
+
 - `get_location_name_from_geolocation`
   - Uses `https://apigateway.alpineconditions.com/geolocation`
   - Resolves a human-readable location via `https://apigateway.alpineconditions.com/weatherforecastapi/location`
