@@ -13,7 +13,7 @@ interface HistoricalEstimateOverview {
   precipitation: {
     totalMm: number | null
     rainTotalMm: number | null
-    snowfallTotalMm: number | null
+    snowfallTotalCm: number | null
     maxHourlyMm: number | null
   }
   snowLiquidRatio: {
@@ -41,7 +41,7 @@ interface HistoricalEstimateChunkSummary {
   precipitation: {
     totalMm: number | null
     rainTotalMm: number | null
-    snowfallTotalMm: number | null
+    snowfallTotalCm: number | null
   }
   snowLiquidRatio: {
     avg: number | null
@@ -139,7 +139,7 @@ export const summarizeHistoricalEstimate = (estimate: HistoricalEstimateDto): Hi
     precipitation: {
       totalMm: sumOrNull(precipitation),
       rainTotalMm: sumOrNull(rain),
-      snowfallTotalMm: sumOrNull(snowfall),
+      snowfallTotalCm: sumOrNull(snowfall),
       maxHourlyMm: maxOrNull(precipitation)
     },
     snowLiquidRatio: {
@@ -190,7 +190,7 @@ export const summarizeHistoricalEstimateBy6HourChunks = (
         precipitation: {
           totalMm: sumOrNull(precipitation),
           rainTotalMm: sumOrNull(rain),
-          snowfallTotalMm: sumOrNull(snowfall)
+          snowfallTotalCm: sumOrNull(snowfall)
         },
         snowLiquidRatio: {
           avg: avgOrNull(snowLiquidRatio)

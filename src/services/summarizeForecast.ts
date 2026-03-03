@@ -5,8 +5,8 @@ interface ForecastSummary {
   localTimeZone: string
   firstLocalTime: string | null
   hoursAvailable: number
-  snowfallTotalMm: number | null
-  snowfallNext24hMm: number | null
+  snowfallTotalCm: number | null
+  snowfallNext24hCm: number | null
   precipitationNext24hMm: number | null
   slr: {
     totalPeriod: number | null
@@ -233,8 +233,8 @@ const formatModelSummary = (forecast: WeatherForecastDto): ForecastSummary => {
     localTimeZone: forecast.localTimeZone,
     firstLocalTime: forecast.forecastDataDateTimeLocal?.[0] ?? null,
     hoursAvailable: forecast.forecastDataDateTimeLocal?.length ?? 0,
-    snowfallTotalMm: sumValues(forecast.snowfall),
-    snowfallNext24hMm: sumValues(forecast.snowfall, 24),
+    snowfallTotalCm: sumValues(forecast.snowfall),
+    snowfallNext24hCm: sumValues(forecast.snowfall, 24),
     precipitationNext24hMm: sumValues(forecast.precipitation, 24),
     slr: {
       totalPeriod: weightedSlrAt(forecast.snowfall, forecast.precipitation, totalIndexes),
