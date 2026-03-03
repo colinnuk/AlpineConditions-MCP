@@ -8,6 +8,10 @@ interface ForecastSummary {
   snowfallTotalMm: number | null
   snowfallNext24hMm: number | null
   precipitationNext24hMm: number | null
+  slr: {
+    totalPeriod: number | null
+    next24h: number | null
+  }
   minTemperatureC: number | null
   maxWindGustKph: number | null
   minFreezingLevelM: number | null
@@ -28,6 +32,9 @@ interface ForecastChunkSummary {
   }
   snowfall: {
     totalMm: number | null
+  }
+  slr: {
+    weightedAverage: number | null
   }
   wind: {
     avgSpeedKph: number | null
@@ -92,6 +99,31 @@ const maxValue = (values: (number | null)[] | null): number | null => {
 const avgValue = (values: number[]): number | null => {
   if (values.length === 0) return null
   return values.reduce((acc, current) => acc + current, 0) / values.length
+}
+
+const weightedSlrAt = (
+  snowfall: (number | null)[] | null,
+  precipitation: (number | null)[] | null,
+  indexes: number[]
+): number | null => {
+  if (!snowfall || !precipitation) return null
+
+  let snowfallTotal = 0
+  let precipitationTotal = 0
+
+  for (const index of indexes) {
+    const snowfallValue = snowfall[index]
+    const precipitationValue = precipitation[index]
+    if (typeof snowfallValue !== 'number' || !Number.isFinite(snowfallValue)) continue
+    if (typeof precipitationValue !== 'number' || !Number.isFinite(precipitationValue)) continue
+    if (precipitationValue <= 0) continue
+
+    snowfallTotal += snowfallValue
+    precipitationTotal += precipitationValue
+  }
+
+  if (precipitationTotal <= 0) return null
+  return snowfallTotal / precipitationTotal
 }
 
 const dominantWeatherDescriptionAt = (
@@ -167,6 +199,9 @@ const summarizeForecastInChunks = (forecast: WeatherForecastDto, chunkHours = 6)
         snowfall: {
           totalMm: snowfallValues.length > 0 ? snowfallValues.reduce((acc, v) => acc + v, 0) : null
         },
+        slr: {
+          weightedAverage: weightedSlrAt(forecast.snowfall, forecast.precipitation, indexes)
+        },
         wind: {
           avgSpeedKph: avgValue(windSpeedValues),
           maxGustKph: windGustValues.length > 0 ? Math.max(...windGustValues) : null
@@ -189,6 +224,10 @@ const summarizeForecastInChunks = (forecast: WeatherForecastDto, chunkHours = 6)
 }
 
 const formatModelSummary = (forecast: WeatherForecastDto): ForecastSummary => {
+  const timeline = forecast.forecastDataDateTimeLocal ?? forecast.forecastDataDateTimeUtc ?? []
+  const totalIndexes = timeline.map((_, index) => index)
+  const next24hIndexes = totalIndexes.slice(0, 24)
+
   return {
     model: forecast.weatherModel,
     localTimeZone: forecast.localTimeZone,
@@ -197,6 +236,10 @@ const formatModelSummary = (forecast: WeatherForecastDto): ForecastSummary => {
     snowfallTotalMm: sumValues(forecast.snowfall),
     snowfallNext24hMm: sumValues(forecast.snowfall, 24),
     precipitationNext24hMm: sumValues(forecast.precipitation, 24),
+    slr: {
+      totalPeriod: weightedSlrAt(forecast.snowfall, forecast.precipitation, totalIndexes),
+      next24h: weightedSlrAt(forecast.snowfall, forecast.precipitation, next24hIndexes)
+    },
     minTemperatureC: minValue(forecast.temperature_2m),
     maxWindGustKph: maxValue(forecast.windGusts_10m),
     minFreezingLevelM: minValue(forecast.freezingLevel),
