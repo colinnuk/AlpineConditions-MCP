@@ -124,7 +124,7 @@ test('production historical estimate tool returns usable recent-history data', {
           generatedAtUtc: string
           hoursAvailable: number
           temperature: { minC: number | null; maxC: number | null; avgC: number | null }
-          precipitation: { totalMm: number | null }
+          precipitation: { rainTotalMm: number | null; snowfallTotalCm: number | null }
           wind: { maxGustKph: number | null }
         }
         sixHourly: {
@@ -132,7 +132,7 @@ test('production historical estimate tool returns usable recent-history data', {
           chunks: Array<{
             points: number
             temperature: { minC: number | null; maxC: number | null; avgC: number | null }
-            precipitation: { totalMm: number | null }
+            precipitation: { rainTotalMm: number | null; snowfallTotalCm: number | null }
           }>
         }
       }

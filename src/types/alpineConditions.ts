@@ -23,16 +23,19 @@ export interface WeatherForecastDto {
   weatherModel: string
   localTimeZone: string
   geocodedLocation: string | null
-  forecastDataDateTimeUtc: (string | null)[] | null
-  forecastDataDateTimeLocal: (string | null)[] | null
+  forecastDataDateTimeUtc: string[] | null
+  forecastDataDateTimeLocal: string[] | null
   temperature_2m: (number | null)[] | null
   precipitation: (number | null)[] | null
+  rain: (number | null)[] | null
   snowfall: (number | null)[] | null
+  snowLiquidRatio: (number | null)[] | null
+  cloudCover: (number | null)[] | null
   windSpeed_10m: (number | null)[] | null
+  windDirection_10m: (number | null)[] | null
   windGusts_10m: (number | null)[] | null
   weatherDescription: (string | null)[] | null
   freezingLevel: (number | null)[] | null
-  rainSnowLevel: (number | null)[] | null
 }
 
 export interface WeatherForecastResponse {

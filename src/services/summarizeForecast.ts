@@ -7,7 +7,7 @@ interface ForecastSummary {
   hoursAvailable: number
   snowfallTotalCm: number | null
   snowfallNext24hCm: number | null
-  precipitationNext24hMm: number | null
+  rainNext24hMm: number | null
   slr: {
     totalPeriod: number | null
     next24h: number | null
@@ -15,7 +15,6 @@ interface ForecastSummary {
   minTemperatureC: number | null
   maxWindGustKph: number | null
   minFreezingLevelM: number | null
-  maxRainSnowLevelM: number | null
 }
 
 interface ForecastChunkSummary {
@@ -27,11 +26,11 @@ interface ForecastChunkSummary {
     maxC: number | null
     avgC: number | null
   }
-  precipitation: {
+  rain: {
     totalMm: number | null
   }
   snowfall: {
-    totalMm: number | null
+    totalCm: number | null
   }
   slr: {
     weightedAverage: number | null
@@ -41,10 +40,6 @@ interface ForecastChunkSummary {
     maxGustKph: number | null
   }
   freezingLevel: {
-    minM: number | null
-    maxM: number | null
-  }
-  rainSnowLevel: {
     minM: number | null
     maxM: number | null
   }
@@ -102,32 +97,39 @@ const avgValue = (values: number[]): number | null => {
 }
 
 const weightedSlrAt = (
+  slrValues: (number | null)[] | null,
   snowfall: (number | null)[] | null,
-  precipitation: (number | null)[] | null,
   indexes: number[]
 ): number | null => {
-  if (!snowfall || !precipitation) return null
+  if (!slrValues) return null
 
-  let snowfallTotalCm = 0
-  let precipitationTotalMm = 0
+  let weightedSlrSum = 0
+  let snowfallWeightTotalCm = 0
+  let unweightedSlrSum = 0
+  let unweightedCount = 0
 
   for (const index of indexes) {
-    const snowfallValue = snowfall[index]
-    const precipitationValue = precipitation[index]
-    if (typeof snowfallValue !== 'number' || !Number.isFinite(snowfallValue)) continue
-    if (typeof precipitationValue !== 'number' || !Number.isFinite(precipitationValue)) continue
-    if (precipitationValue <= 0) continue
+    const slrValue = slrValues[index]
+    const snowfallValue = snowfall?.[index]
+    if (typeof slrValue !== 'number' || !Number.isFinite(slrValue)) continue
 
-    snowfallTotalCm += snowfallValue
-    precipitationTotalMm += precipitationValue
+    unweightedSlrSum += slrValue
+    unweightedCount += 1
+
+    if (typeof snowfallValue !== 'number' || !Number.isFinite(snowfallValue)) continue
+    if (snowfallValue <= 0) continue
+
+    weightedSlrSum += slrValue * snowfallValue
+    snowfallWeightTotalCm += snowfallValue
   }
 
-  if (precipitationTotalMm <= 0) return null
+  if (snowfallWeightTotalCm > 0) {
+    return weightedSlrSum / snowfallWeightTotalCm
+  }
 
-  const precipitationTotalCmWaterEquivalent = precipitationTotalMm / 10
-  if (precipitationTotalCmWaterEquivalent <= 0) return null
+  if (unweightedCount === 0) return null
 
-  return snowfallTotalCm / precipitationTotalCmWaterEquivalent
+  return unweightedSlrSum / unweightedCount
 }
 
 const dominantWeatherDescriptionAt = (
@@ -181,12 +183,11 @@ const summarizeForecastInChunks = (forecast: WeatherForecastDto, chunkHours = 6)
       const firstIndex = indexes[0]
       const lastIndex = indexes[indexes.length - 1]
       const tempValues = finiteValuesAt(forecast.temperature_2m, indexes)
-      const precipitationValues = finiteValuesAt(forecast.precipitation, indexes)
+      const rainValues = finiteValuesAt(forecast.rain, indexes)
       const snowfallValues = finiteValuesAt(forecast.snowfall, indexes)
       const windSpeedValues = finiteValuesAt(forecast.windSpeed_10m, indexes)
       const windGustValues = finiteValuesAt(forecast.windGusts_10m, indexes)
       const freezingLevelValues = finiteValuesAt(forecast.freezingLevel, indexes)
-      const rainSnowLevelValues = finiteValuesAt(forecast.rainSnowLevel, indexes)
 
       return {
         chunkStartTimeLocal: typeof firstIndex === 'number' ? localTimes[firstIndex] ?? null : null,
@@ -197,14 +198,14 @@ const summarizeForecastInChunks = (forecast: WeatherForecastDto, chunkHours = 6)
           maxC: tempValues.length > 0 ? Math.max(...tempValues) : null,
           avgC: avgValue(tempValues)
         },
-        precipitation: {
-          totalMm: precipitationValues.length > 0 ? precipitationValues.reduce((acc, v) => acc + v, 0) : null
+        rain: {
+          totalMm: rainValues.length > 0 ? rainValues.reduce((acc, v) => acc + v, 0) : null
         },
         snowfall: {
-          totalMm: snowfallValues.length > 0 ? snowfallValues.reduce((acc, v) => acc + v, 0) : null
+          totalCm: snowfallValues.length > 0 ? snowfallValues.reduce((acc, v) => acc + v, 0) : null
         },
         slr: {
-          weightedAverage: weightedSlrAt(forecast.snowfall, forecast.precipitation, indexes)
+          weightedAverage: weightedSlrAt(forecast.snowLiquidRatio, forecast.snowfall, indexes)
         },
         wind: {
           avgSpeedKph: avgValue(windSpeedValues),
@@ -213,10 +214,6 @@ const summarizeForecastInChunks = (forecast: WeatherForecastDto, chunkHours = 6)
         freezingLevel: {
           minM: freezingLevelValues.length > 0 ? Math.min(...freezingLevelValues) : null,
           maxM: freezingLevelValues.length > 0 ? Math.max(...freezingLevelValues) : null
-        },
-        rainSnowLevel: {
-          minM: rainSnowLevelValues.length > 0 ? Math.min(...rainSnowLevelValues) : null,
-          maxM: rainSnowLevelValues.length > 0 ? Math.max(...rainSnowLevelValues) : null
         },
         dominantWeatherDescription: dominantWeatherDescriptionAt(
           forecast.weatherDescription as (string | null)[] | null,
@@ -239,15 +236,14 @@ const formatModelSummary = (forecast: WeatherForecastDto): ForecastSummary => {
     hoursAvailable: forecast.forecastDataDateTimeLocal?.length ?? 0,
     snowfallTotalCm: sumValues(forecast.snowfall),
     snowfallNext24hCm: sumValues(forecast.snowfall, 24),
-    precipitationNext24hMm: sumValues(forecast.precipitation, 24),
+    rainNext24hMm: sumValues(forecast.rain, 24),
     slr: {
-      totalPeriod: weightedSlrAt(forecast.snowfall, forecast.precipitation, totalIndexes),
-      next24h: weightedSlrAt(forecast.snowfall, forecast.precipitation, next24hIndexes)
+      totalPeriod: weightedSlrAt(forecast.snowLiquidRatio, forecast.snowfall, totalIndexes),
+      next24h: weightedSlrAt(forecast.snowLiquidRatio, forecast.snowfall, next24hIndexes)
     },
     minTemperatureC: minValue(forecast.temperature_2m),
     maxWindGustKph: maxValue(forecast.windGusts_10m),
-    minFreezingLevelM: minValue(forecast.freezingLevel),
-    maxRainSnowLevelM: maxValue(forecast.rainSnowLevel)
+    minFreezingLevelM: minValue(forecast.freezingLevel)
   }
 }
 

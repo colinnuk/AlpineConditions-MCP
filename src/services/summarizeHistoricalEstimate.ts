@@ -11,7 +11,6 @@ interface HistoricalEstimateOverview {
     avgC: number | null
   }
   precipitation: {
-    totalMm: number | null
     rainTotalMm: number | null
     snowfallTotalCm: number | null
     maxHourlyMm: number | null
@@ -39,7 +38,6 @@ interface HistoricalEstimateChunkSummary {
     avgC: number | null
   }
   precipitation: {
-    totalMm: number | null
     rainTotalMm: number | null
     snowfallTotalCm: number | null
   }
@@ -137,7 +135,6 @@ export const summarizeHistoricalEstimate = (estimate: HistoricalEstimateDto): Hi
       avgC: avgOrNull(temperatures)
     },
     precipitation: {
-      totalMm: sumOrNull(precipitation),
       rainTotalMm: sumOrNull(rain),
       snowfallTotalCm: sumOrNull(snowfall),
       maxHourlyMm: maxOrNull(precipitation)
@@ -169,7 +166,6 @@ export const summarizeHistoricalEstimateBy6HourChunks = (
       const firstIndex = indexes[0]
       const lastIndex = indexes[indexes.length - 1]
       const temperatures = finiteValuesAt(estimate.temperature_2m, indexes)
-      const precipitation = finiteValuesAt(estimate.precipitation, indexes)
       const rain = finiteValuesAt(estimate.rain, indexes)
       const snowfall = finiteValuesAt(estimate.snowfall, indexes)
       const snowLiquidRatio = finiteValuesAt(estimate.snowLiquidRatio, indexes)
@@ -188,7 +184,6 @@ export const summarizeHistoricalEstimateBy6HourChunks = (
           avgC: avgOrNull(temperatures)
         },
         precipitation: {
-          totalMm: sumOrNull(precipitation),
           rainTotalMm: sumOrNull(rain),
           snowfallTotalCm: sumOrNull(snowfall)
         },
