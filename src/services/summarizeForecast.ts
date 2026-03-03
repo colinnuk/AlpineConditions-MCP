@@ -108,8 +108,8 @@ const weightedSlrAt = (
 ): number | null => {
   if (!snowfall || !precipitation) return null
 
-  let snowfallTotal = 0
-  let precipitationTotal = 0
+  let snowfallTotalCm = 0
+  let precipitationTotalMm = 0
 
   for (const index of indexes) {
     const snowfallValue = snowfall[index]
@@ -118,12 +118,16 @@ const weightedSlrAt = (
     if (typeof precipitationValue !== 'number' || !Number.isFinite(precipitationValue)) continue
     if (precipitationValue <= 0) continue
 
-    snowfallTotal += snowfallValue
-    precipitationTotal += precipitationValue
+    snowfallTotalCm += snowfallValue
+    precipitationTotalMm += precipitationValue
   }
 
-  if (precipitationTotal <= 0) return null
-  return snowfallTotal / precipitationTotal
+  if (precipitationTotalMm <= 0) return null
+
+  const precipitationTotalCmWaterEquivalent = precipitationTotalMm / 10
+  if (precipitationTotalCmWaterEquivalent <= 0) return null
+
+  return snowfallTotalCm / precipitationTotalCmWaterEquivalent
 }
 
 const dominantWeatherDescriptionAt = (
