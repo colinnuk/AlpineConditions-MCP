@@ -1,6 +1,6 @@
 # AlpineConditions-MCP
 
-An MCP server for alpineconditions.com weather and geolocation tools.
+An HTTP MCP server for alpineconditions.com weather and geolocation tools, designed for Cloudflare Workers.
 
 ## What this can do now
 
@@ -37,10 +37,18 @@ npm install
 npm run build
 ```
 
-## Run
+## Run locally (Worker dev server)
 
 ```bash
-npm start
+npm run dev
+```
+
+MCP endpoint: `http://127.0.0.1:8787/mcp`
+
+## Deploy (Cloudflare Workers)
+
+```bash
+npm run deploy
 ```
 
 ## Build MCP Bundle
@@ -59,17 +67,12 @@ npm run test:prod
 
 This runs live integration tests against `https://www.alpineconditions.com`.
 
-For development:
-
-```bash
-npm run dev
-```
-
 ## Configuration
 
 - `ALPINECONDITIONS_BASE_URL` (optional)
   - Default: `https://apigateway.alpineconditions.com`
   - Useful for local testing or alternate environments.
+  - In Cloudflare Workers, set this as a Worker environment variable.
 
 ## Notes
 

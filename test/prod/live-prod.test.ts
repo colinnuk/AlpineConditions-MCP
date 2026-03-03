@@ -7,7 +7,7 @@ import { createMcpServer } from '../../src/server.js'
 const connectClientAndServer = async () => {
   process.env.ALPINECONDITIONS_BASE_URL = 'https://apigateway.alpineconditions.com'
 
-  const { server } = createMcpServer()
+  const server = createMcpServer()
   const client = new Client(
     { name: 'alpineconditions-prod-test', version: '0.1.0' },
     { capabilities: {} }
@@ -23,9 +23,18 @@ const connectClientAndServer = async () => {
   return { client, close }
 }
 
+type TextContentItem = { type: 'text'; text: string }
+type ToolCallResultLike = {
+  isError?: boolean
+  content?: Array<{ type?: string; text?: unknown }>
+}
+
 const parseToolTextResponse = (result: Awaited<ReturnType<Client['callTool']>>) => {
-  assert.equal(Boolean(result.isError), false, 'Tool response was marked as an error')
-  const text = result.content.find((item) => item.type === 'text')?.text
+  const payload = result as ToolCallResultLike
+  assert.equal(Boolean(payload.isError), false, 'Tool response was marked as an error')
+  const text = payload.content
+    ?.find((item): item is TextContentItem => item.type === 'text' && typeof item.text === 'string')
+    ?.text
   assert.ok(text, 'Expected text content in tool response')
   return JSON.parse(text)
 }
