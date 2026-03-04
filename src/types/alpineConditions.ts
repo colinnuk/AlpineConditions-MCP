@@ -16,6 +16,95 @@ export interface GeolocationResponse {
   countryTwoLetterCode: string | null
 }
 
+export interface AvalancheAreaIdResponse {
+  areaId: string
+  latitude: number
+  longitude: number
+  issuer: string | null
+  timestampUtc: string
+}
+
+export interface AvalancheNamedValue {
+  value: string
+  display: string
+}
+
+export interface AvalancheOwner {
+  value: string
+  display: string
+  isExternal: boolean
+  url: string | null
+}
+
+export interface AvalancheArea {
+  id: string
+  name: string
+}
+
+export interface AvalancheReportConfidence {
+  rating: AvalancheNamedValue | null
+  statements: string[]
+}
+
+export interface AvalancheSummaryBlock {
+  type: AvalancheNamedValue
+  content: string
+}
+
+export interface AvalancheDangerRatingLevel {
+  display: string
+  rating: AvalancheNamedValue | null
+}
+
+export interface AvalancheDangerRatingSet {
+  alp?: AvalancheDangerRatingLevel
+  tln?: AvalancheDangerRatingLevel
+  btl?: AvalancheDangerRatingLevel
+}
+
+export interface AvalancheDangerRating {
+  date: string
+  ratings: AvalancheDangerRatingSet
+}
+
+export interface AvalancheProblemData {
+  elevations?: AvalancheNamedValue[]
+  aspects?: AvalancheNamedValue[]
+  likelihood?: AvalancheNamedValue | null
+  expectedSize?: {
+    min?: string | null
+    max?: string | null
+  } | null
+}
+
+export interface AvalancheProblem {
+  type: AvalancheNamedValue
+  comment?: string | null
+  data?: AvalancheProblemData | null
+}
+
+export interface AvalancheReport {
+  forecaster?: string | null
+  dateIssued: string
+  validUntil: string
+  title?: string | null
+  highlights?: string | null
+  confidence?: AvalancheReportConfidence | null
+  summaries: AvalancheSummaryBlock[]
+  dangerRatings: AvalancheDangerRating[]
+  problems: AvalancheProblem[]
+  terrainAndTravelAdvice: string[]
+}
+
+export interface AvalancheBulletinResponse {
+  id: string
+  url: string
+  issuer: string | null
+  area: AvalancheArea
+  report: AvalancheReport
+  owner?: AvalancheOwner | null
+}
+
 export interface WeatherForecastDto {
   timestampUtc: string
   requestedLocation: LocationWithElevation

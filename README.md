@@ -30,6 +30,12 @@ An HTTP MCP server for alpineconditions.com weather and geolocation tools, desig
     - which high-resolution models are available at that location
     - model-specific usage guidance
 
+- `get_avalanche_bulletin`
+  - Inputs: `latitude`, `longitude`
+  - Loads avalanche bulletin data from `https://apigateway.alpineconditions.com/avalancheapi`
+  - Internally resolves area ID by coordinates, then loads the latest area bulletin
+  - Returns structured bulletin JSON including area metadata, danger ratings, problems, and terrain/travel advice
+
 ## Setup
 
 ```bash

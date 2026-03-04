@@ -1,6 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import {
+  getAvalancheAreaIdForLocation,
+  getAvalancheBulletinForAreaId,
   getAvailableModels,
   getGeolocation,
   getHistoricalEstimate,
@@ -17,10 +19,56 @@ import {
   summarizeHistoricalEstimate,
   summarizeHistoricalEstimateBy6HourChunks
 } from './services/summarizeHistoricalEstimate.js'
+import { summarizeAvalancheBulletin } from './services/summarizeAvalancheBulletin.js'
 
 const numberSchema = z.number().finite()
 
 export const registerTools = (server: McpServer): void => {
+  server.tool(
+    'get_avalanche_bulletin',
+    'Loads avalanche bulletin data for the given coordinates. Supports locations in British Columbia, Alberta, Switzerland, Austria, and parts of Italy.',
+    {
+      latitude: numberSchema.describe('Latitude in decimal degrees.'),
+      longitude: numberSchema.describe('Longitude in decimal degrees.')
+    },
+    async ({ latitude, longitude }) => {
+      const area = await getAvalancheAreaIdForLocation(latitude, longitude)
+      const bulletin = await getAvalancheBulletinForAreaId(area.areaId)
+      const summary = summarizeAvalancheBulletin(bulletin)
+
+      const result = {
+        location: {
+          requestedCoordinates: { latitude, longitude },
+          resolvedAreaId: area.areaId,
+          issuer: area.issuer,
+          areaLookupTimestampUtc: area.timestampUtc
+        },
+        bulletinSummary: {
+          source: {
+            id: bulletin.id,
+            url: bulletin.url,
+            issuer: bulletin.issuer,
+            area: bulletin.area,
+            owner: bulletin.owner ?? null
+          },
+          topLevelSummary: summary.topLevelSummary,
+          dangerLevelsByDay: summary.dangerLevelsByDay,
+          problems: summary.problems,
+          confidence: summary.confidence
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ]
+      }
+    }
+  )
+
   server.tool(
     'get_weather_forecast',
     'Loads weather forecast data for coordinates from alpineconditions.com.',
