@@ -8,10 +8,9 @@ const stripHtml = (input: string | null | undefined): string | null => {
     .trim()
 }
 
-const normalizeNamedValue = (value: AvalancheNamedValue | null | undefined): { value: string; display: string } | null => {
+const normalizeNamedValue = (value: AvalancheNamedValue | null | undefined): { display: string } | null => {
   if (!value) return null
   return {
-    value: value.value,
     display: value.display
   }
 }

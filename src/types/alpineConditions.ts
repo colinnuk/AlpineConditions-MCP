@@ -30,9 +30,7 @@ export interface AvalancheNamedValue {
 }
 
 export interface AvalancheOwner {
-  value: string
   display: string
-  isExternal: boolean
   url: string | null
 }
 
