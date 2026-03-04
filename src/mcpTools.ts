@@ -42,13 +42,10 @@ export const registerTools = (server: McpServer): void => {
       const result = {
         location: {
           requestedCoordinates: { latitude, longitude },
-          resolvedAreaId: area.areaId,
-          issuer: area.issuer,
           areaLookupTimestampUtc: area.timestampUtc
         },
         bulletinSummary: {
           source: {
-            id: bulletin.id,
             url: bulletin.url,
             issuer: bulletin.issuer,
             area: bulletin.area,

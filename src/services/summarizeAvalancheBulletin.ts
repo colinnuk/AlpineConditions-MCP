@@ -43,7 +43,6 @@ export const summarizeAvalancheBulletin = (bulletin: AvalancheBulletinResponse) 
   const report = bulletin.report
   const highlights = stripHtml(report.highlights)
 
-  const weatherSummary = report.summaries.find((summary) => summary.type.value === 'weather-summary')
   const avalancheSummary = report.summaries.find((summary) => summary.type.value === 'avalanche-summary')
   const snowpackSummary = report.summaries.find((summary) => summary.type.value === 'snowpack-summary')
 
@@ -55,7 +54,6 @@ export const summarizeAvalancheBulletin = (bulletin: AvalancheBulletinResponse) 
       highlights,
       avalancheSummary: stripHtml(avalancheSummary?.content),
       snowpackSummary: stripHtml(snowpackSummary?.content),
-      weatherSummary: stripHtml(weatherSummary?.content),
       travelAdvice: report.terrainAndTravelAdvice
     },
     dangerLevelsByDay: report.dangerRatings.map((item) => ({
