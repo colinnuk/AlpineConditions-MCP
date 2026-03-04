@@ -24,12 +24,15 @@ import { summarizeAvalancheBulletin } from './services/summarizeAvalancheBulleti
 const numberSchema = z.number().finite()
 
 export const registerTools = (server: McpServer): void => {
-  server.tool(
+  server.registerTool(
     'get_avalanche_bulletin',
-    'Loads avalanche bulletin data for the given coordinates. Supports locations in British Columbia, Alberta, Switzerland, Austria, and parts of Italy.',
     {
-      latitude: numberSchema.describe('Latitude in decimal degrees.'),
-      longitude: numberSchema.describe('Longitude in decimal degrees.')
+      description:
+        'Loads avalanche bulletin data for the given coordinates. Supports locations in British Columbia, Alberta, Switzerland, Austria, and parts of Italy.',
+      inputSchema: {
+        latitude: numberSchema.describe('Latitude in decimal degrees.'),
+        longitude: numberSchema.describe('Longitude in decimal degrees.')
+      }
     },
     async ({ latitude, longitude }) => {
       const area = await getAvalancheAreaIdForLocation(latitude, longitude)
@@ -69,13 +72,15 @@ export const registerTools = (server: McpServer): void => {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_weather_forecast',
-    'Loads weather forecast data for coordinates from alpineconditions.com.',
     {
-      latitude: numberSchema.describe('Latitude in decimal degrees.'),
-      longitude: numberSchema.describe('Longitude in decimal degrees.'),
-      models: z.array(z.string().min(1)).optional().describe('Optional weather model names. If omitted, top 3 available models are used.')
+      description: 'Loads weather forecast data for coordinates from alpineconditions.com.',
+      inputSchema: {
+        latitude: numberSchema.describe('Latitude in decimal degrees.'),
+        longitude: numberSchema.describe('Longitude in decimal degrees.'),
+        models: z.array(z.string().min(1)).optional().describe('Optional weather model names. If omitted, top 3 available models are used.')
+      }
     },
     async ({ latitude, longitude, models }) => {
       const available = await getAvailableModels(latitude, longitude)
@@ -117,12 +122,15 @@ export const registerTools = (server: McpServer): void => {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_weather_model_guidance',
-    'Loads weather model guidance for a location, including Blend and high-resolution model availability.',
     {
-      latitude: numberSchema.describe('Latitude in decimal degrees.'),
-      longitude: numberSchema.describe('Longitude in decimal degrees.')
+      description:
+        'Loads weather model guidance for a location, including Blend and high-resolution model availability.',
+      inputSchema: {
+        latitude: numberSchema.describe('Latitude in decimal degrees.'),
+        longitude: numberSchema.describe('Longitude in decimal degrees.')
+      }
     },
     async ({ latitude, longitude }) => {
       const available = await getAvailableModels(latitude, longitude)
@@ -144,12 +152,15 @@ export const registerTools = (server: McpServer): void => {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_historical_weather_estimate',
-    'Loads historical weather estimate data for coordinates from alpineconditions.com for approximately the last 6 days.',
     {
-      latitude: numberSchema.describe('Latitude in decimal degrees.'),
-      longitude: numberSchema.describe('Longitude in decimal degrees.')
+      description:
+        'Loads historical weather estimate data for coordinates from alpineconditions.com for approximately the last 6 days.',
+      inputSchema: {
+        latitude: numberSchema.describe('Latitude in decimal degrees.'),
+        longitude: numberSchema.describe('Longitude in decimal degrees.')
+      }
     },
     async ({ latitude, longitude }) => {
       const [location, historical] = await Promise.all([
@@ -182,10 +193,12 @@ export const registerTools = (server: McpServer): void => {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_location_name_from_geolocation',
-    'Uses alpineconditions geolocation endpoint, then resolves a human-readable location name.',
-    {},
+    {
+      description: 'Uses alpineconditions geolocation endpoint, then resolves a human-readable location name.',
+      inputSchema: {}
+    },
     async () => {
       const geolocation = await getGeolocation()
 
