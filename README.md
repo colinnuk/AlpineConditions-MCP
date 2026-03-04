@@ -37,6 +37,10 @@ An HTTP MCP server for alpineconditions.com weather and geolocation tools, desig
   - Internally resolves area ID by coordinates, then loads the latest area bulletin
   - Returns structured bulletin JSON including area metadata, danger ratings, problems, and terrain/travel advice
 
+## Public Link
+- https://mcp.alpineconditions.com/mcp
+- [MCP Inspector](https://mcp.ziziyi.com/inspector?serverUrl=https%3A%2F%2Fmcp.alpineconditions.com%2Fmcp&transport=streamable-http)
+
 ## Setup
 
 ```bash
