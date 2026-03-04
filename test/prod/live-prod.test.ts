@@ -59,11 +59,7 @@ test('production forecast tool returns usable weather data', { timeout: 60_000 }
       }
       models: {
         used: string[]
-        selectedModelGuidance: Array<{ model: string; guidance: string }>
-        locationModelGuidance: {
-          blendModelAvailable: boolean
-          highResolutionModelsAvailable: Array<{ model: string }>
-        }
+        selectedModelNotes: Array<{ model: string; guidance: string; isHighResolution: boolean }>
       }
       forecast: {
         overviewByModel: Array<{ model: string }>
@@ -83,9 +79,8 @@ test('production forecast tool returns usable weather data', { timeout: 60_000 }
     assert.equal(typeof payload.location.timeZone, 'string')
     assert.ok(payload.location.timeZone.length > 0, 'location.timeZone should not be empty')
     assert.ok(payload.models.used.length > 0, 'models.used should not be empty')
-    assert.equal(payload.models.selectedModelGuidance.length, payload.models.used.length)
-    assert.ok(payload.models.selectedModelGuidance.every((m) => m.guidance.length > 0))
-    assert.equal(typeof payload.models.locationModelGuidance.blendModelAvailable, 'boolean')
+    assert.equal(payload.models.selectedModelNotes.length, payload.models.used.length)
+    assert.ok(payload.models.selectedModelNotes.every((m) => m.guidance.length > 0))
     assert.ok(payload.forecast.overviewByModel.length > 0, 'forecast.overviewByModel should not be empty')
     assert.ok(payload.forecast.sixHourlyByModel.length > 0, 'forecast.sixHourlyByModel should not be empty')
     assert.ok(
@@ -213,6 +208,83 @@ test('weather model guidance tool returns location-aware Blend and high-res deta
     assert.ok(
       payload.locationModelGuidance.highResolutionModelsAvailable.every((m) => m.isHighResolution),
       'highResolutionModelsAvailable should only contain high-resolution models'
+    )
+  } finally {
+    await close()
+  }
+})
+
+test('production avalanche bulletin tool returns area lookup and bulletin report', { timeout: 60_000 }, async () => {
+  const { client, close } = await connectClientAndServer()
+
+  try {
+    const result = await client.callTool({
+      name: 'get_avalanche_bulletin',
+      arguments: {
+        latitude: 50.0769,
+        longitude: -122.9485
+      }
+    })
+
+    const payload = parseToolTextResponse(result) as {
+      location: {
+        requestedCoordinates: { latitude: number; longitude: number }
+        resolvedAreaId: string
+        issuer: string | null
+        areaLookupTimestampUtc: string
+      }
+      bulletinSummary: {
+        source: {
+          id: string
+          url: string
+          issuer: string | null
+          area: { id: string; name: string }
+        }
+        topLevelSummary: {
+          dateIssuedUtc: string
+          validUntilUtc: string
+          travelAdvice: string[]
+        }
+        dangerLevelsByDay: Array<{
+          dateUtc: string
+          byElevation: {
+            alpine: unknown
+            treeline: unknown
+            belowTreeline: unknown
+          }
+        }>
+        problems: Array<{
+          type: { value: string; display: string } | null
+          details: string | null
+          aspects: Array<{ value: string; display: string } | null>
+          elevations: Array<{ value: string; display: string } | null>
+        }>
+        confidence: {
+          score: { value: string; display: string } | null
+          statements: string[]
+        }
+      }
+    }
+
+    assert.equal(payload.location.requestedCoordinates.latitude, 50.0769)
+    assert.equal(payload.location.requestedCoordinates.longitude, -122.9485)
+    assert.equal(typeof payload.location.resolvedAreaId, 'string')
+    assert.ok(payload.location.resolvedAreaId.length > 0, 'location.resolvedAreaId should not be empty')
+    assert.equal(typeof payload.location.areaLookupTimestampUtc, 'string')
+    assert.ok(payload.location.areaLookupTimestampUtc.length > 0)
+
+    assert.equal(typeof payload.bulletinSummary.source.id, 'string')
+    assert.ok(payload.bulletinSummary.source.id.length > 0)
+    assert.equal(typeof payload.bulletinSummary.source.url, 'string')
+    assert.ok(payload.bulletinSummary.source.url.length > 0)
+
+    assert.equal(typeof payload.bulletinSummary.topLevelSummary.dateIssuedUtc, 'string')
+    assert.equal(typeof payload.bulletinSummary.topLevelSummary.validUntilUtc, 'string')
+    assert.ok(payload.bulletinSummary.dangerLevelsByDay.length > 0, 'dangerLevelsByDay should not be empty')
+    assert.ok(payload.bulletinSummary.problems.length > 0, 'problems should not be empty')
+    assert.ok(
+      payload.bulletinSummary.topLevelSummary.travelAdvice.length > 0,
+      'terrainAndTravelAdvice should not be empty'
     )
   } finally {
     await close()

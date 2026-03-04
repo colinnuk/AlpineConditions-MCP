@@ -10,7 +10,8 @@ An HTTP MCP server for alpineconditions.com weather and geolocation tools, desig
   - Returns structured forecast JSON with:
     - `overviewByModel` (high-level stats)
     - `sixHourlyByModel` (6-hour chunked summaries for easier LLM interpretation)
-  - Includes model guidance for selected models and location-aware high-resolution/Blend availability
+  - Includes compact model context for LLM use (`used` and concise `selectedModelNotes`)
+  - Use `get_weather_model_guidance` for full location-wide model guidance details
 
 - `get_historical_weather_estimate`
   - Inputs: `latitude`, `longitude`
@@ -29,6 +30,12 @@ An HTTP MCP server for alpineconditions.com weather and geolocation tools, desig
     - whether Alpine Conditions Blend is available
     - which high-resolution models are available at that location
     - model-specific usage guidance
+
+- `get_avalanche_bulletin`
+  - Inputs: `latitude`, `longitude`
+  - Loads avalanche bulletin data from `https://apigateway.alpineconditions.com/avalancheapi`
+  - Internally resolves area ID by coordinates, then loads the latest area bulletin
+  - Returns structured bulletin JSON including area metadata, danger ratings, problems, and terrain/travel advice
 
 ## Setup
 

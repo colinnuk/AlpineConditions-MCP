@@ -1,5 +1,7 @@
 import { getBaseUrl } from '../config.js'
 import {
+  AvalancheAreaIdResponse,
+  AvalancheBulletinResponse,
   AvailableModelsResponse,
   GeolocationResponse,
   HistoricalEstimateResponse,
@@ -89,4 +91,17 @@ export const getHistoricalEstimate = async (
 ): Promise<HistoricalEstimateResponse> => {
   const url = buildUrl('/weatherforecastapi/historicalestimate', { latitude, longitude })
   return fetchJson<HistoricalEstimateResponse>(url)
+}
+
+export const getAvalancheAreaIdForLocation = async (
+  latitude: number,
+  longitude: number
+): Promise<AvalancheAreaIdResponse> => {
+  const url = buildUrl('/avalancheapi/avalanchebulletin/area-id/location', { latitude, longitude })
+  return fetchJson<AvalancheAreaIdResponse>(url)
+}
+
+export const getAvalancheBulletinForAreaId = async (areaId: string): Promise<AvalancheBulletinResponse> => {
+  const url = buildUrl(`/avalancheapi/avalanchebulletin/area/${encodeURIComponent(areaId)}`)
+  return fetchJson<AvalancheBulletinResponse>(url)
 }
