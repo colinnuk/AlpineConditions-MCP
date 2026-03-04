@@ -59,11 +59,7 @@ test('production forecast tool returns usable weather data', { timeout: 60_000 }
       }
       models: {
         used: string[]
-        selectedModelGuidance: Array<{ model: string; guidance: string }>
-        locationModelGuidance: {
-          blendModelAvailable: boolean
-          highResolutionModelsAvailable: Array<{ model: string }>
-        }
+        selectedModelNotes: Array<{ model: string; guidance: string; isHighResolution: boolean }>
       }
       forecast: {
         overviewByModel: Array<{ model: string }>
@@ -83,9 +79,8 @@ test('production forecast tool returns usable weather data', { timeout: 60_000 }
     assert.equal(typeof payload.location.timeZone, 'string')
     assert.ok(payload.location.timeZone.length > 0, 'location.timeZone should not be empty')
     assert.ok(payload.models.used.length > 0, 'models.used should not be empty')
-    assert.equal(payload.models.selectedModelGuidance.length, payload.models.used.length)
-    assert.ok(payload.models.selectedModelGuidance.every((m) => m.guidance.length > 0))
-    assert.equal(typeof payload.models.locationModelGuidance.blendModelAvailable, 'boolean')
+    assert.equal(payload.models.selectedModelNotes.length, payload.models.used.length)
+    assert.ok(payload.models.selectedModelNotes.every((m) => m.guidance.length > 0))
     assert.ok(payload.forecast.overviewByModel.length > 0, 'forecast.overviewByModel should not be empty')
     assert.ok(payload.forecast.sixHourlyByModel.length > 0, 'forecast.sixHourlyByModel should not be empty')
     assert.ok(

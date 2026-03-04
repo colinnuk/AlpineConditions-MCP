@@ -92,6 +92,7 @@ export const registerTools = (server: McpServer): void => {
         getWeatherForecast(latitude, longitude, requestedModels)
       ])
       const modelsUsed = forecast.modelNames.length > 0 ? forecast.modelNames : requestedModels
+      const selectedModelGuidance = buildSelectedModelGuidance(available.models, modelsUsed)
 
       const result = {
         location: {
@@ -102,8 +103,12 @@ export const registerTools = (server: McpServer): void => {
         },
         models: {
           used: modelsUsed,
-          selectedModelGuidance: buildSelectedModelGuidance(available.models, modelsUsed),
-          locationModelGuidance: buildLocationModelGuidance(available.models)
+          selectedModelNotes: selectedModelGuidance.map((entry) => ({
+            model: entry.model,
+            isHighResolution: entry.isHighResolution,
+            forecastDays: entry.forecastDays,
+            guidance: entry.guidance
+          }))
         },
         forecast: {
           overviewByModel: summarizeForecasts(forecast.weatherForecasts),
