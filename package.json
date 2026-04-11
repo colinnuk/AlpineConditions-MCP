@@ -15,9 +15,12 @@
     "test:prod": "node --import tsx --test test/prod/*.test.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.26.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "agents": "^0.10.0",
     "zod": "^4.0.0"
+  },
+  "overrides": {
+    "@modelcontextprotocol/sdk": "1.29.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
