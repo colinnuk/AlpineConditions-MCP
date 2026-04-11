@@ -18,7 +18,16 @@ export default {
 		const url = new URL(request.url)
 		if (url.pathname === '/mcp') {
 			const server = createMcpServer()
-			return createMcpHandler(server, { enableJsonResponse: true })(request, env, ctx)
+			// OpenAI's MCP client only sends Accept: application/json, but WorkerTransport
+			// validates that text/event-stream is also declared (per the Streamable HTTP spec).
+			// Patch the header so validation passes; enableJsonResponse ensures JSON responses.
+			const accept = request.headers.get('Accept') ?? ''
+			const mcpRequest = accept.includes('text/event-stream') ? request : (() => {
+				const headers = new Headers(request.headers)
+				headers.set('Accept', accept ? `${accept}, text/event-stream` : 'application/json, text/event-stream')
+				return new Request(request, { headers })
+			})()
+			return createMcpHandler(server, { enableJsonResponse: true })(mcpRequest, env, ctx)
 		}
 
 		return new Response('Not found', { status: 404 })
