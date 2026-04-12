@@ -7,7 +7,7 @@
   "migrations": [
     {
       "new_sqlite_classes": ["AlpineConditionsMcp"],
-      "tag": "v1"
+      "tag": "v2"
     }
   ],
   "durable_objects": {
