@@ -32,6 +32,10 @@ export default {
 			return AlpineConditionsMcp.serve('/mcp').fetch(request, env, ctx)
 		}
 
+		if (url.pathname.startsWith('/sse')) {
+			return AlpineConditionsMcp.serveSSE('/sse').fetch(request, env, ctx)
+		}
+
 		return new Response('Not found', { status: 404 })
 	}
 }
