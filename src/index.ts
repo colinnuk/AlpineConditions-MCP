@@ -1,6 +1,7 @@
-import { createMcpHandler } from 'agents/mcp'
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { McpAgent } from 'agents/mcp'
 import { setBaseUrlOverride } from './config.js'
-import { createMcpServer } from './server.js'
+import { registerTools } from './mcpTools.js'
 
 export type Env = {
 	ALPINECONDITIONS_BASE_URL?: string
@@ -11,14 +12,24 @@ type WorkerExecutionContext = {
 	passThroughOnException(): void
 }
 
+export class AlpineConditionsMcp extends McpAgent {
+	server = new McpServer({
+		name: 'alpineconditions-mcp',
+		version: '0.1.0'
+	})
+
+	async init(): Promise<void> {
+		registerTools(this.server)
+	}
+}
+
 export default {
 	fetch(request: Request, env: Env, ctx: WorkerExecutionContext): Response | Promise<Response> {
 		setBaseUrlOverride(env.ALPINECONDITIONS_BASE_URL)
 
 		const url = new URL(request.url)
 		if (url.pathname === '/mcp') {
-			const server = createMcpServer()
-			return createMcpHandler(server, { enableJsonResponse: true })(request, env, ctx)
+			return AlpineConditionsMcp.serve('/mcp').fetch(request, env, ctx)
 		}
 
 		if (url.pathname.startsWith('/sse')) {
