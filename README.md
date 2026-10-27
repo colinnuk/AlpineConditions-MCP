@@ -2,6 +2,8 @@
 
 An HTTP MCP server for alpineconditions.com weather and geolocation tools, designed for Cloudflare Workers.
 
+The server can also run in an OAuth-protected mode for hosted deployments, so MCP clients can authenticate and the upstream Alpine Conditions API can receive a stable per-user partition token.
+
 ## What this can do now
 
 - `get_weather_forecast`
@@ -82,8 +84,31 @@ This runs live integration tests against `https://www.alpineconditions.com`.
 
 - `ALPINECONDITIONS_BASE_URL` (optional)
   - Default: `https://apigateway.alpineconditions.com`
-  - Useful for local testing or alternate environments.
+  - Useful for local testing, alternate environments, or pointing hosted MCP traffic at a non-rate-limited authenticated upstream.
   - In Cloudflare Workers, set this as a Worker environment variable.
+
+- `ALPINECONDITIONS_FORCE_OAUTH` (optional)
+  - Default: off
+  - When enabled, `/mcp` and `/sse` require a bearer token and the worker serves MCP OAuth protected-resource metadata from `/.well-known/oauth-protected-resource/mcp`.
+
+- `ALPINECONDITIONS_OAUTH_AUTHORIZATION_SERVERS` (optional)
+  - Comma-separated list of OAuth authorization server base URLs to advertise in MCP protected-resource metadata.
+  - If omitted, the worker falls back to its own origin, which only works if OAuth metadata and endpoints are available there.
+
+- `ALPINECONDITIONS_OAUTH_SCOPES` (optional)
+  - Comma-separated OAuth scopes to advertise for MCP clients.
+
+- `ALPINECONDITIONS_OAUTH_RESOURCE_NAME` (optional)
+  - Human-readable protected resource name returned in MCP OAuth metadata.
+
+- `ALPINECONDITIONS_PARTITION_HEADER_NAME` (optional)
+  - Default: `X-AlpineConditions-User-Id`
+  - Header name sent upstream with a stable per-user partition token derived from the bearer token.
+
+- `ALPINECONDITIONS_USER_ID_CLAIMS` (optional)
+  - Comma-separated JWT claim names to try when deriving the upstream partition token.
+  - Default order: `sub,oid,email,preferred_username,upn`
+  - If none of those claims are present, the server falls back to a short SHA-256 hash of the bearer token.
 
 ## Notes
 

@@ -1,3 +1,4 @@
+import { getCurrentAgent } from 'agents'
 import { getBaseUrl } from '../config.js'
 import {
   AvalancheAreaIdResponse,
@@ -8,10 +9,13 @@ import {
   LocationInfoResponse,
   WeatherForecastResponse
 } from '../types/alpineConditions.js'
+import { getPartitionHeaderName, getUserIdClaims } from '../config.js'
 
 const jsonHeaders = {
   'Content-Type': 'application/json'
 }
+
+const textEncoder = new TextEncoder()
 
 const buildUrl = (path: string, query?: Record<string, string | number | (string | number)[] | undefined>): URL => {
   const url = new URL(path, `${getBaseUrl()}/`)
@@ -32,10 +36,102 @@ const buildUrl = (path: string, query?: Record<string, string | number | (string
   return url
 }
 
+const decodeBase64Url = (value: string): string | null => {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
+  const paddingLength = (4 - (normalized.length % 4)) % 4
+  const padded = normalized.padEnd(normalized.length + paddingLength, '=')
+
+  try {
+    const decoded = atob(padded)
+    const bytes = Uint8Array.from(decoded, (char) => char.charCodeAt(0))
+    return new TextDecoder().decode(bytes)
+  } catch {
+    return null
+  }
+}
+
+const parseJwtPayload = (token: string): Record<string, unknown> | null => {
+  const parts = token.split('.')
+  if (parts.length < 2) {
+    return null
+  }
+
+  const payload = decodeBase64Url(parts[1] ?? '')
+  if (!payload) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(payload)
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null
+  } catch {
+    return null
+  }
+}
+
+const normalizeClaimValue = (value: unknown): string | null => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const normalized = normalizeClaimValue(entry)
+      if (normalized) {
+        return normalized
+      }
+    }
+  }
+
+  return null
+}
+
+const hashToken = async (token: string): Promise<string> => {
+  const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(token))
+  return Array.from(new Uint8Array(digest))
+    .slice(0, 16)
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+const buildPartitionToken = async (token: string): Promise<string> => {
+  const payload = parseJwtPayload(token)
+  if (payload) {
+    for (const claimName of getUserIdClaims()) {
+      const value = normalizeClaimValue(payload[claimName])
+      if (value) {
+        return value
+      }
+    }
+  }
+
+  return hashToken(token)
+}
+
+const buildRequestHeaders = async (): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = { ...jsonHeaders }
+  const request = getCurrentAgent().request
+  const authorization = request?.headers.get('authorization')?.trim()
+
+  if (!authorization) {
+    return headers
+  }
+
+  const [scheme, token] = authorization.split(/\s+/, 2)
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
+    return headers
+  }
+
+  headers.Authorization = authorization
+  headers[getPartitionHeaderName()] = await buildPartitionToken(token)
+  return headers
+}
+
 const fetchJson = async <T>(url: URL): Promise<T> => {
   const response = await fetch(url, {
     method: 'GET',
-    headers: jsonHeaders
+    headers: await buildRequestHeaders()
   })
 
   if (!response.ok) {
